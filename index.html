@@ -1,67 +1,776 @@
-
 <!DOCTYPE html>
-<html lang="pt-br">
+
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <title>Padrões Operacionais em Ocorrências Aeronáuticas</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-    nav { width: 220px; float: left; background-color: #003366; color: white; height: 100vh; padding: 20px; }
-    nav a { color: white; display: block; margin-bottom: 10px; text-decoration: none; }
-    main { margin-left: 240px; padding: 20px; }
-    section { display: none; }
-    section.active { display: block; }
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; }
-    th, td { padding: 8px; border: 1px solid #ccc; }
-    th { background-color: #f0f0f0; }
-    .resumo-insight { background: #fff3cd; border-left: 5px solid #ffc107; padding: 12px; margin-bottom: 20px; }
-    .export { background: #003366; color: white; padding: 8px 12px; border: none; cursor: pointer; }
-  </style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Padrões Operacionais em Ocorrências Aeronáuticas no Brasil (2000–2024)</title>
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.css" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.0.0/css/all.min.css" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.4/css/dataTables.bootstrap5.min.css" rel="stylesheet"/>
+<style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .chart-container {
+            position: relative;
+            margin: auto;
+            height: 400px;
+            width: 100%;
+        }
+        table.dataTable thead th, table.dataTable thead td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        table.dataTable tbody th, table.dataTable tbody td {
+            padding: 8px;
+        }
+        .cluster-card {
+            transition: transform 0.3s ease;
+        }
+        .cluster-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .metric-card {
+            border-left: 4px solid #4F46E5;
+        }
+        @media print {
+            .tab-navigation {
+                display: none;
+            }
+            .tab-content {
+                display: block !important;
+                page-break-after: auto;
+                margin-bottom: 40px;
+            }
+            .chart-container {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
 </head>
-<body>
-<nav>
-  <h3>Ocorrências</h3>
-  <a href="#" onclick="mostrar('geral')">Todas Ocorrências</a>
-  <a href="#" onclick="mostrar('acidente')">Acidente</a>
-  <a href="#" onclick="mostrar('grave')">Incidente Grave</a>
-  <a href="#" onclick="mostrar('incidente')">Incidente</a>
+<body class="bg-gray-50">
+<header class="bg-indigo-700 text-white py-6 shadow-md">
+<div class="container mx-auto px-4">
+<h1 class="text-3xl font-bold">Padrões Operacionais em Ocorrências Aeronáuticas no Brasil (2000–2024)</h1>
+<p class="mt-2 text-indigo-100">Uma Abordagem com Regras de Associação e Clusterização Hierárquica</p>
+</div>
+</header>
+<!-- Tab Navigation -->
+<nav class="bg-white shadow-md tab-navigation">
+<div class="container mx-auto px-4">
+<ul class="flex flex-wrap border-b border-gray-200">
+<li class="mr-1">
+<a class="tab-link inline-block py-3 px-4 text-indigo-600 font-medium border-b-2 border-indigo-600" data-tab="resumo" href="#resumo">Resumo</a>
+</li>
+<li class="mr-1">
+<a class="tab-link inline-block py-3 px-4 text-gray-600 hover:text-indigo-600 font-medium" data-tab="metodologia" href="#metodologia">Metodologia</a>
+</li>
+
+<li class="mr-1">
+<a class="tab-link inline-block py-3 px-4 text-gray-600 hover:text-indigo-600 font-medium" data-tab="clusterizacao" href="#clusterizacao">Clusterização</a>
+</li>
+<li class="mr-1">
+<a class="tab-link inline-block py-3 px-4 text-gray-600 hover:text-indigo-600 font-medium" data-tab="regras-associacao" href="#regras-associacao">Regras de Associação</a>
+</li>
+<li class="mr-1">
+<a class="tab-link inline-block py-3 px-4 text-gray-600 hover:text-indigo-600 font-medium" data-tab="discussao" href="#discussao">Discussão</a>
+</li>
+<li class="mr-1">
+<a class="tab-link inline-block py-3 px-4 text-gray-600 hover:text-indigo-600 font-medium" data-tab="conclusao" href="#conclusao">Conclusão</a>
+</li>
+</ul>
+</div>
 </nav>
-<main>
-  <section id="geral" class="active">
-    <h2>Todas Ocorrências</h2>
-    <div class="resumo-insight">Colisões com aves envolvendo aeronaves de grande porte geram incidentes leves com alta Lift.</div>
-    <img src="lift_geral_top5.png" width="100%"/>
-    <img src="confidence_geral_top5.png" width="100%"/>
-    <img src="support_geral_top5.png" width="100%"/>
-  </section>
-  <section id="acidente">
-    <h2>Acidente</h2>
-    <div class="resumo-insight">Acidentes estão associados a falhas no pouso com aeronaves menores.</div>
-    <img src="lift_acidente_top5.png" width="100%"/>
-    <img src="confidence_acidente_top5.png" width="100%"/>
-    <img src="support_acidente_top5.png" width="100%"/>
-  </section>
-  <section id="grave">
-    <h2>Incidente Grave</h2>
-    <div class="resumo-insight">Excursões de pista e falhas técnicas são os principais gatilhos dos incidentes graves.</div>
-    <img src="lift_grave_top5.png" width="100%"/>
-    <img src="confidence_grave_top5.png" width="100%"/>
-    <img src="support_grave_top5.png" width="100%"/>
-  </section>
-  <section id="incidente">
-    <h2>Incidente</h2>
-    <div class="resumo-insight">Incidentes ocorrem com frequência na aviação regular, especialmente por colisão com aves.</div>
-    <img src="lift_incidente_top5.png" width="100%"/>
-    <img src="confidence_incidente_top5.png" width="100%"/>
-    <img src="support_incidente_top5.png" width="100%"/>
-  </section>
+<main class="container mx-auto px-4 py-8">
+<!-- Resumo -->
+<section class="tab-content active bg-white rounded-lg shadow-md p-6 mb-8" id="resumo">
+<h2 class="text-2xl font-bold text-indigo-700 mb-4">Resumo</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div>
+<p class="mb-4">Este artigo analisa as ocorrências aeronáuticas com aviões registradas no Brasil entre 2000 e 2024, explorando a diversidade de eventos por meio de técnicas de mineração de dados com foco em regras de associação e clusterização hierárquica (ou agrupamento hierárquico).</p>
+<p class="mb-4">Foram investigadas variáveis como classificação da ocorrência (acidente, incidente grave e incidente), fase de voo, tipo de operação, danos, quantidade de motores, tipo de motor, tipo/subtipo e categoria de peso da aeronave, visando identificar padrões e inter-relações significativas.</p>
+<p class="mb-4">Utilizando o algoritmo FP-Growth, implementado via biblioteca mlxtend de Python, foram extraídas regras de associação com base em métricas como suporte, confiança e lift. Para segmentação dos eventos, aplicou-se a clusterização hierárquica, utilizando a distância de Gower, adequada para dados categóricos.</p>
+</div>
+<div>
+<p class="mb-4">A clusterização permitiu agrupar eventos semelhantes em categorias homogêneas, complementando a análise das associações. A integração dessas abordagens possibilitou uma visão detalhada dos padrões operacionais e fatores de risco, permitindo validar associações e grupos característicos de ocorrências aeronáuticas.</p>
+<p class="mb-4">Essas descobertas sugerem prioridades e estratégias de prevenção, contribuindo para a mitigação de riscos na aviação brasileira.</p>
+<div class="bg-indigo-50 p-4 rounded-lg border-l-4 border-indigo-500">
+<h3 class="font-bold text-indigo-700">Objetivos do Estudo</h3>
+<ul class="list-disc pl-5 mt-2">
+<li>Identificar padrões em ocorrências aeronáuticas no Brasil</li>
+<li>Descobrir associações entre variáveis técnicas e operacionais</li>
+<li>Agrupar eventos semelhantes usando clusterização hierárquica</li>
+<li>Fornecer insights para prevenção e segurança operacional</li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+<!-- Metodologia -->
+<section class="tab-content bg-white rounded-lg shadow-md p-6 mb-8" id="metodologia">
+<h2 class="text-2xl font-bold text-indigo-700 mb-4">Metodologia</h2>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+<div class="bg-white rounded-lg border border-gray-200 p-5">
+<h3 class="text-xl font-semibold text-indigo-600 mb-3">Coleta e Pré-processamento dos Dados</h3>
+<p class="mb-3">Os dados utilizados foram obtidos do CENIPA, do banco de dados DÉDALO, contendo registros detalhados de ocorrências aeronáuticas no Brasil entre 2000 e 2024, envolvendo equipamentos tipo avião.</p>
+<p class="font-medium">Variáveis analisadas:</p>
+<ul class="list-disc ml-5 mt-2">
+<li>Classificação da ocorrência: acidente, incidente grave e incidente</li>
+<li>Fase de voo: 28 fases de voo</li>
+<li>Tipo de operação: regular, táxi aéreo, privado, instrução e agrícola</li>
+<li>Danos a aeronave: destruída, substancial, leve e nenhum</li>
+<li>Quantidade de motor: 1 e 2 motores</li>
+<li>Tipo de motor: jato, pistão, turbo eixo e turboélice</li>
+<li>Tipo/subtipo de ocorrência: 77 tipos</li>
+<li>Categoria de peso da aeronave: até 2250 kg, entre 2250 e 5700 kg e acima de 5700 kg</li>
+</ul>
+</div>
+<div class="bg-white rounded-lg border border-gray-200 p-5">
+<h3 class="text-xl font-semibold text-indigo-600 mb-3">Tratamento e Transformação dos Dados</h3>
+<p class="mb-3">Os dados foram importados com a função <code class="bg-gray-100 px-1 rounded">read_excel</code> da biblioteca pandas (Python), e as variáveis categóricas selecionadas foram convertidas para o formato texto (string) e transformadas via codificação binária (one-hot encoding).</p>
+<p class="mb-3">Essa codificação, realizada com a função <code class="bg-gray-100 px-1 rounded">get_dummies</code> do pandas, é essencial para representar cada nível categórico como um item individual, resultando em uma matriz onde cada linha representa uma transação composta por atributos binários.</p>
+<p>A estrutura transacional foi então processada pela biblioteca <code class="bg-gray-100 px-1 rounded">mlxtend.frequent_patterns</code>, que permite aplicar o algoritmo FP-Growth sobre dados categóricos já codificados.</p>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+<div class="bg-white rounded-lg border border-gray-200 p-5">
+<h3 class="text-xl font-semibold text-indigo-600 mb-3">Regras de Associação (FP-Growth)</h3>
+<p class="mb-3">As regras de associação visam identificar padrões relacionais entre variáveis categóricas por meio de expressões do tipo {antecedente} ⇒ {consequente}, que indicam possíveis vínculos de ocorrência entre os itens.</p>
+<p class="mb-3">O processo ocorre em duas etapas: (1) identificação de conjuntos frequentes de itens (itemsets) com base em um suporte mínimo predefinido e (2) geração de regras de associação a partir desses itemsets.</p>
+<p class="font-medium mb-2">Filtros aplicados para garantir a qualidade das regras:</p>
+<ul class="list-disc ml-5">
+<li>Suporte mínimo: 2%</li>
+<li>Confiança mínima: 60%</li>
+<li>Lift mínimo: 1.5</li>
+<li>Leverage &gt; 0</li>
+<li>Índice de Jaccard ≥ 0.2</li>
+<li>Conviction ≥ 1.2</li>
+<li>Certainty ≥ 0.2</li>
+</ul>
+</div>
+<div class="bg-white rounded-lg border border-gray-200 p-5">
+<h3 class="text-xl font-semibold text-indigo-600 mb-3">Clusterização Hierárquica</h3>
+<p class="mb-3">Foi aplicada a clusterização hierárquica, utilizando a distância de Gower, uma métrica apropriada para dados categóricos e mistos, com o objetivo de identificar padrões nas ocorrências aeronáuticas.</p>
+<p class="mb-3">O método de Ward foi adotado para a formação dos agrupamentos, buscando minimizar a variância intra-cluster. Para a caracterização dos grupos, foi utilizada a moda, medida de tendência central adequada para variáveis categóricas.</p>
+<p class="mb-3">A definição do número ideal de clusters foi baseada no índice de Silhouette Score, que avalia simultaneamente a coesão interna e a separação entre os grupos formados.</p>
+<p>Optou-se por 7 clusters, representando um ponto de equilíbrio entre desempenho estatístico e riqueza interpretativa, permitindo distinguir melhor os grupos e capturar subdivisões relevantes.</p>
+</div>
+</div>
+<div class="mt-8 bg-indigo-50 p-4 rounded-lg shadow-sm">
+<h3 class="text-lg font-semibold text-indigo-700 mb-2">Métricas Utilizadas na Análise</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
+<div class="bg-white p-3 rounded border-l-4 border-indigo-500 shadow-sm metric-card">
+<h4 class="font-bold text-indigo-700">Suporte</h4>
+<p>Frequência com que um itemset aparece no conjunto de dados. Indica a prevalência do padrão.</p>
+</div>
+<div class="bg-white p-3 rounded border-l-4 border-indigo-500 shadow-sm metric-card">
+<h4 class="font-bold text-indigo-700">Confiança</h4>
+<p>Probabilidade condicional de ocorrência do consequente dado o antecedente. Mede a força da regra.</p>
+</div>
+<div class="bg-white p-3 rounded border-l-4 border-indigo-500 shadow-sm metric-card">
+<h4 class="font-bold text-indigo-700">Lift</h4>
+<p>Razão entre a confiança observada e a esperada se os eventos fossem independentes. Quantifica a relevância da associação.</p>
+</div>
+<div class="bg-white p-3 rounded border-l-4 border-indigo-500 shadow-sm metric-card">
+<h4 class="font-bold text-indigo-700">Leverage</h4>
+<p>Diferença entre o suporte observado e o esperado se os eventos fossem independentes. Indica a força da dependência.</p>
+</div>
+<div class="bg-white p-3 rounded border-l-4 border-indigo-500 shadow-sm metric-card">
+<h4 class="font-bold text-indigo-700">Conviction</h4>
+<p>Mede quanto o antecedente aumentaria se a regra fosse perfeita. Quantifica a implicação lógica da regra.</p>
+</div>
+<div class="bg-white p-3 rounded border-l-4 border-indigo-500 shadow-sm metric-card">
+<h4 class="font-bold text-indigo-700">Índice de Jaccard</h4>
+<p>Mede a similaridade entre conjuntos como a razão entre a interseção e a união. Avalia a coincidência dos itens.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Visualizações -->
+
+<!-- Clusterização -->
+<section class="tab-content bg-white rounded-lg shadow-md p-6 mb-8" id="clusterizacao">
+<h2 class="text-2xl font-bold text-indigo-700 mb-6">Resultados da Clusterização</h2>
+<p class="mb-6">A análise de agrupamento hierárquico identificou padrões consistentes nas ocorrências aeronáuticas, segregando-as em 7 clusters com características distintas. Abaixo, apresentamos os principais grupos identificados por tipo de ocorrência.</p>
+<div class="mb-8">
+<h3 class="text-xl font-semibold text-indigo-600 mb-4">Clusters para Ocorrências Gerais</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+<div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md cluster-card">
+<h4 class="font-bold text-lg mb-2 text-indigo-700">Cluster 1</h4>
+<p class="text-sm text-gray-500 mb-2">Acidentes com monomotores a pistão</p>
+<ul class="list-disc ml-5 text-sm">
+<li>Peso até 2250kg</li>
+<li>Operações privadas</li>
+<li>Fase: decolagem</li>
+<li>Problema: falha de motor</li>
+<li>Danos: substanciais</li>
+</ul>
+</div>
+<div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md cluster-card">
+<h4 class="font-bold text-lg mb-2 text-indigo-700">Cluster 2</h4>
+<p class="text-sm text-gray-500 mb-2">Incidentes/incidentes graves com monomotores</p>
+<ul class="list-disc ml-5 text-sm">
+<li>Motores a pistão</li>
+<li>Peso até 2250kg</li>
+<li>Fase: pouso</li>
+<li>Problema: falha de sistema/trem</li>
+<li>Danos: leves ou nenhum</li>
+</ul>
+</div>
+<div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md cluster-card">
+<h4 class="font-bold text-lg mb-2 text-indigo-700">Cluster 3</h4>
+<p class="text-sm text-gray-500 mb-2">Acidentes com aeronaves de médio porte</p>
+<ul class="list-disc ml-5 text-sm">
+<li>Turboélice</li>
+<li>Peso entre 2250-5700kg</li>
+<li>Operações táxi aéreo/privadas</li>
+<li>Fase: pouso</li>
+<li>Danos: substanciais</li>
+</ul>
+</div>
+<div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md cluster-card">
+<h4 class="font-bold text-lg mb-2 text-indigo-700">Cluster 4</h4>
+<p class="text-sm text-gray-500 mb-2">Incidentes com bimotores a jato</p>
+<ul class="list-disc ml-5 text-sm">
+<li>Peso acima de 5700kg</li>
+<li>Operação regular</li>
+<li>Fase: cruzeiro</li>
+<li>Problema: falha de sistema</li>
+<li>Danos: nenhum</li>
+</ul>
+</div>
+<div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md cluster-card">
+<h4 class="font-bold text-lg mb-2 text-indigo-700">Cluster 5</h4>
+<p class="text-sm text-gray-500 mb-2">Incidentes com aeronaves leves</p>
+<ul class="list-disc ml-5 text-sm">
+<li>Peso até 2250kg</li>
+<li>Operações de instrução</li>
+<li>Fase: taxi</li>
+<li>Problema: colisão no solo</li>
+<li>Danos: leves</li>
+</ul>
+</div>
+<div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm hover:shadow-md cluster-card">
+<h4 class="font-bold text-lg mb-2 text-indigo-700">Cluster 6</h4>
+<p class="text-sm text-gray-500 mb-2">Incidentes com aeronaves de grande porte</p>
+<ul class="list-disc ml-5 text-sm">
+<li>Peso acima de 5700kg</li>
+<li>Motores a jato</li>
+<li>Operação regular</li>
+<li>Problema: colisão com ave</li>
+<li>Danos: leves</li>
+</ul>
+</div>
+</div>
+</div>
+<hr class="my-6 border-gray-200"/>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+<div>
+<h3 class="text-xl font-semibold text-indigo-600 mb-4">Clusters para Acidentes</h3>
+<div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+<p class="mb-2"><span class="font-semibold">Principais características:</span></p>
+<ul class="list-disc ml-5 text-sm mb-3">
+<li>Cluster 3: Monomotores a pistão até 2250kg, privados, em cruzeiro, com falha de motor e danos substanciais</li>
+<li>Clusters 1 e 7: Bimotores turboélice 2250-5700kg, privados, na decolagem/pouso, com danos graves</li>
+<li>Cluster 6: Monomotores a pistão até 2250kg em instrução, no pouso, com falha de motor</li>
+</ul>
+<div class="bg-indigo-50 p-2 rounded-lg">
+<p class="text-sm text-indigo-700 font-medium">Destaque: Aeronaves leves e turboélices de médio porte apresentam maior risco de acidentes graves.</p>
+</div>
+</div>
+</div>
+<div>
+<h3 class="text-xl font-semibold text-indigo-600 mb-4">Clusters para Incidentes Graves</h3>
+<div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+<p class="mb-2"><span class="font-semibold">Principais características:</span></p>
+<ul class="list-disc ml-5 text-sm mb-3">
+<li>Clusters 2 e 3: Monomotores a pistão até 2250kg, no pouso, com falha de sistema/trem ou motor</li>
+<li>Cluster 5: Bimotores a jato acima de 5700kg, regulares, no pouso, com excursão de pista</li>
+<li>Cluster 7: Bimotores a pistão até 2250kg, privados, no pouso, com falha de sistema</li>
+</ul>
+<div class="bg-indigo-50 p-2 rounded-lg">
+<p class="text-sm text-indigo-700 font-medium">Destaque: A fase de pouso é crítica para incidentes graves, independente do tipo de aeronave.</p>
+</div>
+</div>
+</div>
+<div>
+<h3 class="text-xl font-semibold text-indigo-600 mb-4">Clusters para Incidentes</h3>
+<div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
+<p class="mb-2"><span class="font-semibold">Principais características:</span></p>
+<ul class="list-disc ml-5 text-sm mb-3">
+<li>Cluster 2: Bimotores a jato acima de 5700kg, regulares, na subida, com falha de sistema e sem danos</li>
+<li>Clusters 3, 4, 7: Aeronaves a pistão até 2250kg, privadas/instrução, no pouso/táxi, com falha de sistema/pneu</li>
+<li>Cluster 5: Bimotores turboélice 2250-5700kg, privados, no pouso, com falha de sistema/pneu</li>
+</ul>
+<div class="bg-indigo-50 p-2 rounded-lg">
+<p class="text-sm text-indigo-700 font-medium">Destaque: Falha de sistema/componente é causa dominante de incidentes em todas as categorias.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="bg-indigo-50 p-5 rounded-lg">
+<h3 class="text-lg font-semibold text-indigo-700 mb-3">Análise dos Clusters por Tipo de Aeronave</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="bg-white p-4 rounded border border-indigo-200">
+<h4 class="font-bold text-indigo-600 mb-2">Aviação Leve (Pistão, até 2250kg)</h4>
+<ul class="list-disc ml-5 text-sm">
+<li>Predominância em operações privadas e de instrução</li>
+<li>Alto risco de acidentes por falha de motor</li>
+<li>Danos frequentemente substanciais</li>
+<li>Fases críticas: decolagem, cruzeiro e pouso</li>
+<li>Incidentes graves predominantemente no pouso com falha de trem/sistema</li>
+</ul>
+</div>
+<div class="bg-white p-4 rounded border border-indigo-200">
+<h4 class="font-bold text-indigo-600 mb-2">Aviação Comercial (Jato, acima de 5700kg)</h4>
+<ul class="list-disc ml-5 text-sm">
+<li>Predominância em operações regulares</li>
+<li>Maioria dos eventos são incidentes</li>
+<li>Problemas frequentes: falha de sistema ou colisão com ave</li>
+<li>Danos geralmente leves ou inexistentes</li>
+<li>Incidentes graves ocorrem principalmente no pouso (excursão de pista)</li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+<!-- Regras de Associação -->
+<section class="tab-content bg-white rounded-lg shadow-md p-6 mb-8" id="regras-associacao">
+<h2 class="text-2xl font-bold text-indigo-700 mb-6">Resultados das Regras de Associação</h2>
+<p class="mb-6">A análise por regras de associação permitiu identificar padrões de relacionamento entre variáveis das ocorrências aeronáuticas. Foram geradas regras para o conjunto total de ocorrências e subconjuntos específicos (acidentes, incidentes graves e incidentes).</p>
+<div class="mb-8">
+<h3 class="text-xl font-semibold text-indigo-600 mb-4">Regras para Ocorrências Gerais</h3>
+<div class="overflow-x-auto">
+<table class="min-w-full bg-white border border-gray-200 table-auto">
+<thead class="bg-gray-100">
+<tr>
+<th class="py-2 px-4 border-b text-left">Regra</th>
+<th class="py-2 px-4 border-b text-left">Antecedente</th>
+<th class="py-2 px-4 border-b text-left">Consequente</th>
+<th class="py-2 px-4 border-b text-left">Interpretação</th>
+<th class="py-2 px-4 border-b text-left">Confiança</th>
+<th class="py-2 px-4 border-b text-left">Lift</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-gray-200">
+<tr class="hover:bg-gray-50">
+<td class="py-3 px-4">Regra 1</td>
+<td class="py-3 px-4">Aeronaves com peso acima de 5700 kg, bimotor, envolvidas em colisão com aves</td>
+<td class="py-3 px-4">Operação regular, motor do tipo jato, danos leves e classificação como incidente</td>
+<td class="py-3 px-4">Aeronaves comerciais de grande porte, ao colidirem com aves, tendem a não apresentar danos significativos</td>
+<td class="py-3 px-4">65.9%</td>
+<td class="py-3 px-4">14.27</td>
+</tr>
+<tr class="hover:bg-gray-50">
+<td class="py-3 px-4">Regra 2</td>
+<td class="py-3 px-4">Acidente, falha/mau funcionamento do motor em voo, peso até 2250 kg</td>
+<td class="py-3 px-4">Danos substanciais, motor pistão, monomotor</td>
+<td class="py-3 px-4">Aeronaves leves que sofreram acidente por falha de motor apresentam forte associação com danos substanciais</td>
+<td class="py-3 px-4">73.3%</td>
+<td class="py-3 px-4">3.82</td>
+</tr>
+<tr class="hover:bg-gray-50">
+<td class="py-3 px-4">Regra 3</td>
+<td class="py-3 px-4">Aeronaves com peso acima de 5700 kg, bimotor, com falha de sistema/componente</td>
+<td class="py-3 px-4">Motor jato, nenhum dano, operação regular, classificação incidente</td>
+<td class="py-3 px-4">Falhas de sistema em aeronaves grandes têm forte associação com operações regulares sem danos</td>
+<td class="py-3 px-4">63%</td>
+<td class="py-3 px-4">5.65</td>
+</tr>
+<tr class="hover:bg-gray-50">
+<td class="py-3 px-4">Regra 4</td>
+<td class="py-3 px-4">Aeronave com motor turboélice e operação táxi aéreo</td>
+<td class="py-3 px-4">Peso entre 2250 e 5700 kg, classificação incidente</td>
+<td class="py-3 px-4">Aeronaves em operação táxi aéreo com motor turboélice têm forte associação com incidentes</td>
+<td class="py-3 px-4">73%</td>
+<td class="py-3 px-4">7.26</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="mb-8">
+<h3 class="text-xl font-semibold text-indigo-600 mb-4">Regras para Acidentes</h3>
+<div class="overflow-x-auto">
+<table class="min-w-full bg-white border border-gray-200 table-auto">
+<thead class="bg-gray-100">
+<tr>
+<th class="py-2 px-4 border-b text-left">Regra</th>
+<th class="py-2 px-4 border-b text-left">Antecedente</th>
+<th class="py-2 px-4 border-b text-left">Consequente</th>
+<th class="py-2 px-4 border-b text-left">Interpretação</th>
+<th class="py-2 px-4 border-b text-left">Confiança</th>
+<th class="py-2 px-4 border-b text-left">Lift</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-gray-200">
+<tr class="hover:bg-gray-50">
+<td class="py-3 px-4">Regra 1</td>
+<td class="py-3 px-4">Aeronaves com motor tipo jato</td>
+<td class="py-3 px-4">Quantidade de motor 2 (bimotor) e peso acima de 5700 kg</td>
+<td class="py-3 px-4">Aeronaves acidentadas com motor jato têm forte associação com bimotores de grande porte</td>
+<td class="py-3 px-4">72%</td>
+<td class="py-3 px-4">24.12</td>
+</tr>
+<tr class="hover:bg-gray-50">
+<td class="py-3 px-4">Regra 2</td>
+<td class="py-3 px-4">Aeronave em operação agrícola e motor turboélice</td>
+<td class="py-3 px-4">Peso entre 2250 e 5700 kg, monomotor, danos substanciais</td>
+<td class="py-3 px-4">Aeronaves agrícolas com motor turboélice têm forte associação com danos substanciais</td>
+<td class="py-3 px-4">77%</td>
+<td class="py-3 px-4">18.8</td>
+</tr>
+<tr class="hover:bg-gray-50">
+<td class="py-3 px-4">Regra 3</td>
+<td class="py-3 px-4">Aeronave na fase de decolagem e motor turboélice</td>
+<td class="py-3 px-4">Peso entre 2250 e 5700 kg e monomotor</td>
+<td class="py-3 px-4">Acidentes na decolagem com turboélice têm forte associação com aeronaves monomotoras de médio porte</td>
+<td class="py-3 px-4">80%</td>
+<td class="py-3 px-4">14.8</td>
+</tr>
+<tr class="hover:bg-gray-50">
+<td class="py-3 px-4">Regra 4</td>
+<td class="py-3 px-4">Motor pistão, fase especializada, monomotor</td>
+<td class="py-3 px-4">Danos substanciais, operação agrícola, peso até 2250 kg</td>
+<td class="py-3 px-4">Monomotores a pistão em operações especializadas têm forte associação com danos substanciais</td>
+<td class="py-3 px-4">75%</td>
+<td class="py-3 px-4">3.5</td>
+</tr>
+<tr class="hover:bg-gray-50">
+<td class="py-3 px-4">Regra 5</td>
+<td class="py-3 px-4">Peso até 2250 kg na fase de cruzeiro</td>
+<td class="py-3 px-4">Motor pistão, operação privada, monomotor</td>
+<td class="py-3 px-4">Aeronaves leves em cruzeiro apresentam forte associação com motor pistão monomotor em operações privadas</td>
+<td class="py-3 px-4">65%</td>
+<td class="py-3 px-4">2.0</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+<div>
+<h3 class="text-xl font-semibold text-indigo-600 mb-4">Regras para Incidentes Graves</h3>
+<div class="overflow-x-auto">
+<table class="min-w-full bg-white border border-gray-200 table-auto">
+<thead class="bg-gray-100">
+<tr>
+<th class="py-2 px-4 border-b text-left">Regra</th>
+<th class="py-2 px-4 border-b text-left">Antecedente</th>
+<th class="py-2 px-4 border-b text-left">Consequente</th>
+<th class="py-2 px-4 border-b text-left">Lift</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-gray-200">
+<tr class="hover:bg-gray-50">
+<td class="py-3 px-4">Regra 1</td>
+<td class="py-3 px-4">Peso entre 2250-5700 kg e monomotor</td>
+<td class="py-3 px-4">Motor turboélice e danos leves</td>
+<td class="py-3 px-4">11.6</td>
+</tr>
+<tr class="hover:bg-gray-50">
+<td class="py-3 px-4">Regra 2</td>
+<td class="py-3 px-4">Peso acima de 5700 kg, sem danos, bimotor</td>
+<td class="py-3 px-4">Motor jato e operação regular</td>
+<td class="py-3 px-4">8.41</td>
+</tr>
+<tr class="hover:bg-gray-50">
+<td class="py-3 px-4">Regra 3</td>
+<td class="py-3 px-4">Motor pistão, falha de motor em voo, operação privada</td>
+<td class="py-3 px-4">Peso até 2250 kg e fase de cruzeiro</td>
+<td class="py-3 px-4">7.22</td>
+</tr>
+<tr class="hover:bg-gray-50">
+<td class="py-3 px-4">Regra 4</td>
+<td class="py-3 px-4">Danos substanciais, motor pistão, privada, monomotor</td>
+<td class="py-3 px-4">Perda de controle no solo e peso até 2250 kg</td>
+<td class="py-3 px-4">7.1</td>
+</tr>
+<tr class="hover:bg-gray-50">
+<td class="py-3 px-4">Regra 5</td>
+<td class="py-3 px-4">Contato anormal com pista/pouso sem trem, peso até 2250 kg</td>
+<td class="py-3 px-4">Motor pistão, operação privada, fase de pouso</td>
+<td class="py-3 px-4">5.7</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div>
+<h3 class="text-xl font-semibold text-indigo-600 mb-4">Regras para Incidentes</h3>
+<div class="overflow-x-auto">
+<table class="min-w-full bg-white border border-gray-200 table-auto">
+<thead class="bg-gray-100">
+<tr>
+<th class="py-2 px-4 border-b text-left">Regra</th>
+<th class="py-2 px-4 border-b text-left">Antecedente</th>
+<th class="py-2 px-4 border-b text-left">Consequente</th>
+<th class="py-2 px-4 border-b text-left">Lift</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-gray-200">
+<tr class="hover:bg-gray-50">
+<td class="py-3 px-4">Regra 1</td>
+<td class="py-3 px-4">Peso acima de 5700 kg, colisão com ave e bimotor</td>
+<td class="py-3 px-4">Motor jato, operação regular e danos leves</td>
+<td class="py-3 px-4">8.0</td>
+</tr>
+<tr class="hover:bg-gray-50">
+<td class="py-3 px-4">Regra 2</td>
+<td class="py-3 px-4">Falha de sistema/componente e peso até 2250 kg</td>
+<td class="py-3 px-4">Motor pistão, sem danos, monomotor</td>
+<td class="py-3 px-4">4.5</td>
+</tr>
+<tr class="hover:bg-gray-50">
+<td class="py-3 px-4">Regra 3</td>
+<td class="py-3 px-4">Peso acima de 5700 kg, falha de sistema/componente</td>
+<td class="py-3 px-4">Motor jato, sem danos, operação regular</td>
+<td class="py-3 px-4">2.4</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="bg-indigo-50 p-5 rounded-lg">
+<h3 class="text-lg font-semibold text-indigo-700 mb-3">Padrões Identificados nas Regras de Associação</h3>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="bg-white p-3 rounded border border-indigo-200 shadow-sm">
+<h4 class="font-bold text-indigo-600 mb-2">Acidentes</h4>
+<ul class="list-disc ml-5 text-sm">
+<li>Forte associação entre aeronaves leves (monomotores a pistão) em operações privadas e danos substanciais</li>
+<li>Risco significativo para turboélices em operações agrícolas</li>
+<li>Fase de decolagem crítica para aeronaves com turboélice</li>
+<li>Falha de motor é causa predominante em acidentes com aeronaves leves</li>
+</ul>
+</div>
+<div class="bg-white p-3 rounded border border-indigo-200 shadow-sm">
+<h4 class="font-bold text-indigo-600 mb-2">Incidentes Graves</h4>
+<ul class="list-disc ml-5 text-sm">
+<li>Fase de pouso é crítica para todas as categorias</li>
+<li>Contato anormal com a pista/pouso sem trem frequente em aeronaves leves</li>
+<li>Aeronaves pesadas (jato) tendem a sofrer incidentes graves principalmente por excursão de pista</li>
+<li>Para monomotores a pistão, falha de sistema/trem é causa comum</li>
+</ul>
+</div>
+<div class="bg-white p-3 rounded border border-indigo-200 shadow-sm">
+<h4 class="font-bold text-indigo-600 mb-2">Incidentes</h4>
+<ul class="list-disc ml-5 text-sm">
+<li>Falha de sistema/componente é a causa dominante em todas as categorias</li>
+<li>Colisão com ave é frequente em aeronaves de grande porte</li>
+<li>Aeronaves a jato em operação regular tendem a sofrer predominantemente incidentes sem danos</li>
+<li>Aeronaves leves têm incidentes associados principalmente às fases de taxi e pouso</li>
+</ul>
+</div>
+</div>
+</div>
+</section>
+<!-- Discussão -->
+<section class="tab-content bg-white rounded-lg shadow-md p-6 mb-8" id="discussao">
+<h2 class="text-2xl font-bold text-indigo-700 mb-6">Discussão</h2>
+<p class="mb-4">A análise dos dados por meio da clusterização hierárquica e das regras de associação revelou padrões robustos de ocorrência, com características técnicas e operacionais bem delineadas. A clusterização permitiu identificar agrupamentos com perfis distintos de aeronaves, fases de voo, tipos de operação e natureza dos danos, fornecendo uma base sólida para a análise exploratória.</p>
+<p class="mb-6">Por sua vez, as regras de associação ofereceram vínculos relacionais consistentes entre essas variáveis, permitindo identificar combinações específicas associadas às classificações de acidente, incidente grave e incidente.</p>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+<div class="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
+<h3 class="text-xl font-semibold text-indigo-600 mb-3">Ocorrências Gerais</h3>
+<h4 class="font-bold text-gray-700 mb-2">Agrupamento Hierárquico</h4>
+<ul class="list-disc ml-5 mb-4 text-sm">
+<li><span class="font-medium">Cluster 1:</span> Acidentes com monomotores a pistão com peso até 2250kg, privados, na decolagem, com falha de motor e danos substanciais.</li>
+<li><span class="font-medium">Cluster 4:</span> Incidentes com bimotores a jato acima de 5700kg, em operação regular, no cruzeiro, com falha de sistema e sem danos.</li>
+<li>Outros clusters mostram perfis como incidentes/incidentes graves com monomotores a pistão no pouso.</li>
+</ul>
+<h4 class="font-bold text-gray-700 mb-2">Regras de Associação</h4>
+<ul class="list-disc ml-5 mb-4 text-sm">
+<li><span class="font-medium">Regra 2 (Geral):</span> Confirma diretamente o perfil do cluster 1 HC, quantificando a forte associação (confiança 73.3%, lift 3.82) entre acidente, falha de motor em voo, peso até 2250kg e o consequente (danos substanciais, pistão, monomotor).</li>
+<li><span class="font-medium">Regra 3 (Geral):</span> Confirma diretamente o perfil do cluster 4 HC, mostrando a forte ligação (confiança 63%, lift 5.65) entre aeronaves com peso acima de 5700kg, bimotor, com falha de sistema e o consequente (jato, sem danos, regular, incidente).</li>
+</ul>
+<div class="bg-indigo-50 p-3 rounded">
+<h4 class="font-bold text-indigo-700 mb-1">Resumo</h4>
+<ul class="list-disc ml-5 text-sm">
+<li><span class="font-medium">Aviação Leve/Privada:</span> Fortemente associada a motores a Pistão, com peso até 2250kg, operações Privadas, e tendo risco significativo de Acidentes com Danos Substanciais, ligados a Falha de Motor.</li>
+<li><span class="font-medium">Aviação Comercial/Grande Porte:</span> Associada a Jatos/Turboélices, com peso acima de 5700kg, operações Regulares, e predominância Incidentes com nenhum dano ou leve, frequentemente ligados a Falha de Sistemas ou Colisão com ave.</li>
+</ul>
+</div>
+</div>
+<div class="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
+<h3 class="text-xl font-semibold text-indigo-600 mb-3">Acidentes</h3>
+<h4 class="font-bold text-gray-700 mb-2">Agrupamento Hierárquico</h4>
+<ul class="list-disc ml-5 mb-4 text-sm">
+<li><span class="font-medium">Cluster 3:</span> Acidentes com monomotores a pistão com peso até 2250kg, privados, em cruzeiro, com falha de motor e danos substanciais.</li>
+<li><span class="font-medium">Cluster 1 e 7:</span> Acidentes com bimotores turboélice com peso entre 2250-5700 kg, privados, na decolagem (perda de controle) ou pouso (excursão de pista), com danos graves.</li>
+<li><span class="font-medium">Cluster 6:</span> Acidentes com monomotores a pistão com peso até 2250kg em instrução, no pouso, com falha de motor e danos substanciais.</li>
+</ul>
+<h4 class="font-bold text-gray-700 mb-2">Regras de Associação</h4>
+<ul class="list-disc ml-5 mb-4 text-sm">
+<li><span class="font-medium">Regra 5:</span> Confirma o perfil do cluster 3 HC, mostrando a associação (confiança 65%) entre com peso até 2250kg na fase de cruzeiro e o consequente (pistão, privada, monomotor) em acidentes.</li>
+<li><span class="font-medium">Regra 2 e 3:</span> Apontam para riscos com turboélices (monomotores ou não) na faixa de peso entre 2250-5700kg, especialmente em operações agrícolas ou na decolagem, levando a danos substanciais.</li>
+</ul>
+<div class="bg-indigo-50 p-3 rounded">
+<h4 class="font-bold text-indigo-700 mb-1">Resumo</h4>
+<ul class="list-disc ml-5 text-sm">
+<li><span class="font-medium">Aviação Leve:</span> Monomotores a pistão com peso até 2250kg em operações privadas ou especializadas/agrícolas são o cenário comum de acidente, frequentemente por falha de motor.</li>
+<li><span class="font-medium">Turboélices:</span> Aeronaves turboélices com peso entre 2250-5700kg, especialmente em operações agrícolas ou fases críticas como decolagem/pouso, representam outro grupo de risco significativo para acidentes.</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+<div class="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
+<h3 class="text-xl font-semibold text-indigo-600 mb-3">Incidente Grave</h3>
+<h4 class="font-bold text-gray-700 mb-2">Agrupamento Hierárquico</h4>
+<ul class="list-disc ml-5 mb-4 text-sm">
+<li><span class="font-medium">Cluster 2 e 3:</span> Incidentes graves com monomotores a pistão com peso até 2250kg, no pouso, envolvendo falha de sistema/trem ou falha de motor, com danos nenhum/leve.</li>
+<li><span class="font-medium">Cluster 5:</span> Incidentes graves com bimotores a jato com peso acima de 5700kg, regulares, no pouso, geralmente excursão de pista sem danos.</li>
+</ul>
+<h4 class="font-bold text-gray-700 mb-2">Regras de Associação</h4>
+<ul class="list-disc ml-5 mb-4 text-sm">
+<li><span class="font-medium">Regra 2:</span> Confirma diretamente o perfil do Cluster 5 HC, mostrando a forte ligação entre aeronaves com peso acima de 5700kg, sem danos, bimotor e o consequente (Jato, Regular) em incidentes graves.</li>
+<li><span class="font-medium">Regra 5:</span> Descreve um tipo específico (Contato Anormal/Pouso Sem Trem) para aeronaves peso até 2250kg, associado a Pistão, Privada, Pouso.</li>
+</ul>
+<div class="bg-indigo-50 p-3 rounded">
+<h4 class="font-bold text-indigo-700 mb-1">Resumo</h4>
+<ul class="list-disc ml-5 text-sm">
+<li><span class="font-medium">Pouso:</span> Fase chave para incidentes graves, tanto para aviação leve quanto pesada.</li>
+<li><span class="font-medium">Distinção por tipo:</span> Aeronaves leves (Pistão com peso até 2250kg) têm incidentes graves frequentemente ligados a falhas de motor ou sistema/trem. Aeronaves pesadas têm incidentes graves mais associados a eventos operacionais como excursão de pista.</li>
+</ul>
+</div>
+</div>
+<div class="bg-white rounded-lg border border-gray-200 p-5 shadow-sm">
+<h3 class="text-xl font-semibold text-indigo-600 mb-3">Incidente</h3>
+<h4 class="font-bold text-gray-700 mb-2">Agrupamento Hierárquico</h4>
+<ul class="list-disc ml-5 mb-4 text-sm">
+<li><span class="font-medium">Cluster 2:</span> Incidentes com bimotores a jato com peso acima de 5700kg, regulares, na subida, com falha de sistema e sem danos (muito frequente: 1238).</li>
+<li><span class="font-medium">Clusters 3, 4, 7:</span> Incidentes com aeronaves a pistão (com peso até 2250kg), privadas ou instrução, no pouso ou taxi, com falha de sistema/pneu e danos nenhum/leve.</li>
+</ul>
+<h4 class="font-bold text-gray-700 mb-2">Regras de Associação</h4>
+<ul class="list-disc ml-5 mb-4 text-sm">
+<li><span class="font-medium">Regra 3:</span> Confirma fortemente o perfil do Cluster 2 HC, mostrando a alta associação (Confiança 67%, Suporte 8.4%) com peso acima de 5700kg, Falha de Sistema e o consequente (Jato, Nenhum Dano, Regular).</li>
+<li><span class="font-medium">Regra 2:</span> Corrobora os perfis dos Clusters 3 e 4 HC, ligando Falha de Sistema em aeronaves com peso até 2250kg ao consequente (Pistão, Nenhum Dano, Monomotor).</li>
+</ul>
+<div class="bg-indigo-50 p-3 rounded">
+<h4 class="font-bold text-indigo-700 mb-1">Resumo</h4>
+<ul class="list-disc ml-5 text-sm">
+<li><span class="font-medium">Falha de Sistema/Componente:</span> Tanto HC quanto AR mostram que "Falha de Sistema/Componente" (incluindo pneus) é a causa dominante de incidentes em todas as categorias.</li>
+<li><span class="font-medium">Danos:</span> Incidentes raramente resultam em danos significativos (predominantemente 'Nenhum' ou 'Leve').</li>
+<li><span class="font-medium">Segmentação:</span> Jatos grandes com falhas de sistema em voo; Aeronaves a Pistão leves com falhas de sistema/pneu em fases de solo ou pouso; Turboélices médios com problemas similares.</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="mt-8 bg-yellow-50 p-5 rounded-lg border border-yellow-200">
+<h3 class="text-lg font-semibold text-yellow-700 mb-3">Observação</h3>
+<p class="text-sm">Como o suporte mínimo adotado foi de 2%, observou-se que tipo de motor turbo eixo não emergiu nas regras de associação nem como atributo relevante nos clusters. A frequência extremamente baixa dessa categoria justificou, do ponto de vista estatístico, sua exclusão nas etapas analíticas do modelo.</p>
+</div>
+</section>
+<!-- Conclusão -->
+<section class="tab-content bg-white rounded-lg shadow-md p-6" id="conclusao">
+<h2 class="text-2xl font-bold text-indigo-700 mb-6">Conclusão</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+<div>
+<p class="mb-4">Esta pesquisa demonstrou que a integração entre regras de associação e clusterização hierárquica é eficaz para desvendar padrões complexos em ocorrências aeronáuticas. Ao analisar 7.077 registros no Brasil entre 2000 e 2024, foi possível identificar perfis técnicos-operacionais distintos associados a acidentes, incidentes graves e incidentes.</p>
+<p class="mb-4">Os resultados evidenciaram que aeronaves leves, monomotoras, com motor a pistão e operando em contextos privados, agrícolas ou de instrução estão mais associadas a acidentes com danos substanciais. Por outro lado, incidentes mostraram-se predominantes na aviação regular, em especial com aeronaves de grande porte e motor a jato, frequentemente envolvidas em falhas de sistema ou colisões com aves.</p>
+</div>
+<div>
+<p class="mb-4">A análise segmentada por tipo de ocorrência fortaleceu as associações, realçando a importância de abordagens específicas para interpretação dos dados. A convergência entre os métodos aplicados não apenas valida hipóteses conhecidas, como também revela riscos subestimados, como os ligados à aviação agrícola.</p>
+<p class="mb-4">Como contribuição prática, os achados oferecem subsídios para o aprimoramento de políticas de segurança operacional mais direcionadas, priorizando contextos vulneráveis. Para trabalhos futuros, recomenda-se o uso de séries temporais, inferência causal e modelos preditivos voltados à severidade e prevenção.</p>
+</div>
+</div>
+<div class="bg-gradient-to-r from-indigo-50 to-blue-50 p-6 rounded-lg shadow-sm border border-indigo-100">
+<h3 class="text-xl font-semibold text-indigo-700 mb-4">Principais Contribuições</h3>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+<div>
+<h4 class="font-bold text-indigo-600 mb-2">Insights para Segurança Operacional</h4>
+<ul class="list-disc ml-5 text-sm">
+<li>Identificação de padrões operacionais críticos em diferentes categorias de aeronaves</li>
+<li>Reconhecimento das fases de voo com maior incidência de ocorrências por tipo de aeronave</li>
+<li>Compreensão da relação entre tipo de operação e severidade dos eventos</li>
+<li>Mapeamento das falhas mais comuns para cada perfil de aeronave e operação</li>
+</ul>
+</div>
+<div>
+<h4 class="font-bold text-indigo-600 mb-2">Recomendações para Trabalhos Futuros</h4>
+<ul class="list-disc ml-5 text-sm">
+<li>Análise de séries temporais para identificar tendências e sazonalidades</li>
+<li>Modelos preditivos para estimativa de risco em diferentes cenários operacionais</li>
+<li>Estudo específico sobre operações agrícolas, identificadas como de alto risco</li>
+<li>Extensão da análise para ocorrências com helicópteros</li>
+<li>Aprofundamento na compreensão dos fatores contribuintes por meio de análise de texto</li>
+</ul>
+</div>
+</div>
+</div>
+</section>
 </main>
+<footer class="bg-indigo-800 text-white py-6">
+<div class="container mx-auto px-4">
+<div class="flex flex-col md:flex-row justify-between items-center">
+<div class="mb-4 md:mb-0">
+<h3 class="text-xl font-bold">Padrões Operacionais em Ocorrências Aeronáuticas no Brasil</h3>
+<p class="text-indigo-200 mt-1">Uma Abordagem com Regras de Associação e Clusterização Hierárquica</p>
+</div>
+<div class="text-center md:text-right">
+<p class="text-indigo-200">Análise de Dados: 2000-2024</p>
+<p class="text-indigo-200 mt-1">Fonte de dados: CENIPA - Centro de Investigação e Prevenção de Acidentes Aeronáuticos</p>
+</div>
+</div>
+</div>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/datatables.net@1.13.4/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/datatables.net-bs5@1.13.4/js/dataTables.bootstrap5.min.js"></script>
 <script>
-  function mostrar(id) {
-    document.querySelectorAll('section').forEach(sec => sec.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-  }
-</script>
+        // Tab Navigation
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabLinks = document.querySelectorAll('.tab-link');
+            
+            tabLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Remove active class from all tabs
+                    document.querySelectorAll('.tab-link').forEach(tab => {
+                        tab.classList.remove('text-indigo-600', 'border-indigo-600');
+                        tab.classList.add('text-gray-600');
+                    });
+                    
+                    // Add active class to clicked tab
+                    this.classList.remove('text-gray-600');
+                    this.classList.add('text-indigo-600', 'border-indigo-600');
+                    
+                    // Hide all tab content
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    
+                    // Show the corresponding tab content
+                    const tabId = this.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+            
+            // Initialize DataTables
+            if ($.fn.DataTable) {
+                $('table.dataTable').DataTable({
+                    responsive: true,
+                    pageLength: 5,
+                    lengthMenu: [5, 10, 25, 50],
+                    language: {
+                        url: '//cdn.datatables.net/plug-ins/1.13.4/i18n/pt-BR.json'
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>
